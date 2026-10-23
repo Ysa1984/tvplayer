@@ -1,0 +1,27 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>Family Screen player</title>
+<style>html,body{margin:0;height:100%;background:#000;overflow:hidden}#p{position:absolute;top:0;left:0;width:100%;height:100%;border:0}</style>
+</head><body><div id="p"></div>
+<script>
+(function(){
+ var q={};location.search.replace(/^\?/,'').split('&').forEach(function(x){var a=x.split('=');if(a[0])q[a[0]]=decodeURIComponent(a[1]||'')});
+ var list=/^UU[A-Za-z0-9_-]{20,30}$/.test(q.list||'')?q.list:'';
+ function send(o){o.fh=1;try{parent.postMessage(o,'*')}catch(e){}}
+ var pl=null;
+ window.onYouTubeIframeAPIReady=function(){
+  if(!list){send({ev:'err',v:'list'});return}
+  pl=new YT.Player('p',{width:'100%',height:'100%',host:'https://www.youtube.com',
+   playerVars:{listType:'playlist',list:list,autoplay:1,controls:0,rel:0,fs:0,disablekb:1,iv_load_policy:3,playsinline:1,hl:q.hl||'ar',origin:location.origin},
+   events:{onReady:function(){send({ev:'ready'});try{pl.playVideo()}catch(e){}},
+    onStateChange:function(e){send({ev:'state',v:e.data})},
+    onError:function(e){send({ev:'err',v:e.data})}}});
+ };
+ window.addEventListener('message',function(e){
+  var d=e.data;if(!d||d.fh!==1||!pl)return;
+  try{if(d.cmd==='pauseVideo')pl.pauseVideo();else if(d.cmd==='playVideo')pl.playVideo();else if(d.cmd==='nextVideo')pl.nextVideo();else if(d.cmd==='previousVideo')pl.previousVideo()}catch(x){}
+ });
+ var s=document.createElement('script');s.src='https://www.youtube.com/iframe_api';s.onerror=function(){send({ev:'err',v:'api'})};document.head.appendChild(s);
+})();
+</script></body></html>
